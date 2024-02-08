@@ -5,49 +5,46 @@ using System.Linq;
 
 namespace DreamAnt.IPP
 {
-    
     public class InputPad : MonoBehaviour, IBeginDragHandler, IDragHandler, IEndDragHandler, IPointerUpHandler, IPointerDownHandler
     {
-        [SerializeField] private Camera uiCamera;
+        [SerializeField] private InputTrigger inputTrigger;
         [SerializeField] private GameObject[] commands;
         [SerializeField] private List<Point> pointList;
         [SerializeField] private BoxCollider2D inputCollider;
         [SerializeField] private LineRenderer lineRenderer;
 
-        private RectTransform inputRectTransform;
-        private RectTransform rectTransform;
+        private RectTransform _inputRectTransform;
+        private RectTransform _rectTransform;
 
-        private List<GameObject> userInput = new List<GameObject>();
-        private int dotPerLine = 3;
+        private List<GameObject> _userInput;
+        private int _dotPerLine = 3;
 
         void Awake()
         {
             inputCollider.enabled = false;
-            inputRectTransform = inputCollider.GetComponent<RectTransform>();
-            rectTransform = GetComponent<RectTransform>();
-            dotPerLine = (int)Mathf.Sqrt(pointList.Count);
-        }
-
-        private void Start()
-        {
-            //GameManager.instance.TutorialLineAction(StartTutorialLine, EndTutorialLine);
+            _inputRectTransform = inputCollider.GetComponent<RectTransform>();
+            _userInput = new List<GameObject>();
+            _rectTransform = GetComponent<RectTransform>();
+            _dotPerLine = (int)Mathf.Sqrt(pointList.Count);
+            
+            inputTrigger.SetAction(Input);
         }
 
         void IDragHandler.OnDrag(PointerEventData eventData)
         {
-            Vector2 localPos = Vector2.zero;
-            RectTransformUtility.ScreenPointToLocalPointInRectangle(rectTransform, eventData.position,
+            Vector2 localPos;
+            RectTransformUtility.ScreenPointToLocalPointInRectangle(_rectTransform, eventData.position,
                 Camera.main, out localPos);
 
-            localPos.x = Mathf.Clamp(localPos.x, rectTransform.rect.xMin, rectTransform.rect.xMax);
-            localPos.y = Mathf.Clamp(localPos.y, rectTransform.rect.yMin, rectTransform.rect.yMax);
+            localPos.x = Mathf.Clamp(localPos.x, _rectTransform.rect.xMin, _rectTransform.rect.xMax);
+            localPos.y = Mathf.Clamp(localPos.y, _rectTransform.rect.yMin, _rectTransform.rect.yMax);
             
-            inputRectTransform.localPosition = localPos;
+            _inputRectTransform.localPosition = localPos;
 
-            if (userInput.Count > 0)
+            if (_userInput.Count > 0)
             {
-                lineRenderer.positionCount = userInput.Count + 1;
-                lineRenderer.SetPosition(userInput.Count, inputCollider.transform.position);
+                lineRenderer.positionCount = _userInput.Count + 1;
+                lineRenderer.SetPosition(_userInput.Count, inputCollider.transform.position);
             }
         }
 
@@ -65,47 +62,91 @@ namespace DreamAnt.IPP
 
         public void Input(GameObject obj)
         {
-            if (userInput.Count <= 0)
+            if (_userInput.Count <= 0)
             {
-                userInput.Add(obj);
-                lineRenderer.positionCount = userInput.Count;
+                _userInput.Add(obj);
+                lineRenderer.positionCount = _userInput.Count;
 
-                lineRenderer.SetPosition(userInput.Count - 1, obj.transform.position);
-                //SoundManager.Instance.PlaySound(SoundManager.SoundType.On_Point);
+                lineRenderer.SetPosition(_userInput.Count - 1, obj.transform.position);
                 return;
             }
 
-            if (userInput.Find(o => obj.Equals(o)) == null)
+            if (_userInput.Find(o => obj.Equals(o)) == null)
             {
-                var lastInputObject = userInput.Last();
+                var lastInputObject = _userInput.Last();
                 var lastInputIndex = pointList.FindIndex(o => lastInputObject.Equals(o.obj));
                 var currentObjectIndex = pointList.FindIndex(o => obj.Equals(o.obj));
 
                 List<int> betweenIndexList = GetBetweenObjectList(lastInputIndex, currentObjectIndex);
                 foreach (int idx in betweenIndexList)
                 {
-                    if (userInput.Find(o => pointList[idx].obj.Equals(o)) != null)
+                    if (_userInput.Find(o => pointList[idx].obj.Equals(o)) != null)
                         continue;
 
-                    userInput.Add(pointList[idx].obj);
-                    lineRenderer.positionCount = userInput.Count;
-                    lineRenderer.SetPosition(userInput.Count - 1, pointList[idx].obj.transform.position);
+                    _userInput.Add(pointList[idx].obj);
+                    lineRenderer.positionCount = _userInput.Count;
+                    lineRenderer.SetPosition(_userInput.Count - 1, pointList[idx].obj.transform.position);
                 }
 
-                userInput.Add(obj);
-                lineRenderer.positionCount = userInput.Count;
+                _userInput.Add(obj);
+                lineRenderer.positionCount = _userInput.Count;
 
-                lineRenderer.SetPosition(userInput.Count - 1, obj.transform.position);
-               // SoundManager.Instance.PlaySound(SoundManager.SoundType.On_Point);
+                lineRenderer.SetPosition(_userInput.Count - 1, obj.transform.position);
             }
         }
 
-        private List<int> GetBetweenObjectList(int beginIndex, int endIndex)
+       
+
+        public void OnInputComplete()
+        {
+            string inputString = string.Empty;
+            if (_userInput.Count <= 0)
+                return;
+
+            foreach (var obj in _userInput)
+            {
+                var inputPoint = pointList.Find(point => point.obj.Equals(obj));
+                inputString += inputPoint.value;
+            }
+
+           /* if (GameManager.instance != null)
+            {
+                GameManager.instance.SetPatten(inputString);
+            }*/
+
+            lineRenderer.positionCount = 0;
+            //this.lineRenderer.gameObject.SetActive(false);
+            _userInput.Clear();
+        }
+
+        void IPointerUpHandler.OnPointerUp(PointerEventData eventData)
+        {
+            inputCollider.enabled = false;
+            OnInputComplete();
+        }
+
+        void IPointerDownHandler.OnPointerDown(PointerEventData eventData)
+        {
+            RectTransformUtility.ScreenPointToLocalPointInRectangle(_rectTransform, eventData.position,
+                Camera.main, out var localPos);
+            
+            _inputRectTransform.localPosition = localPos;
+
+            inputCollider.enabled = true;
+            _userInput.Clear();
+        }
+        
+        public void EndTutorialLine()
+        {
+            lineRenderer.positionCount = 0;
+        }
+        
+         private List<int> GetBetweenObjectList(int beginIndex, int endIndex)
         {
             List<int> retList = new List<int>();
 
-            Vector2Int begin = new Vector2Int(beginIndex % this.dotPerLine, (int)beginIndex / (int)this.dotPerLine);
-            Vector2Int end = new Vector2Int(endIndex % this.dotPerLine, (int)endIndex / (int)this.dotPerLine);
+            Vector2Int begin = new Vector2Int(beginIndex % _dotPerLine, beginIndex / _dotPerLine);
+            Vector2Int end = new Vector2Int(endIndex % _dotPerLine, endIndex / _dotPerLine);
 
             Vector2Int diff = end - begin;
             if (diff.x == 0 && diff.y == 0) //���� ��ġ(���ø� ����)
@@ -124,7 +165,7 @@ namespace DreamAnt.IPP
                         break;
                     }
 
-                    int index = temp * this.dotPerLine + begin.x;
+                    int index = temp * _dotPerLine + begin.x;
                     retList.Add(index);
                 }
             }
@@ -140,7 +181,7 @@ namespace DreamAnt.IPP
                         break;
                     }
 
-                    int index = begin.y * this.dotPerLine + temp;
+                    int index = begin.y * _dotPerLine + temp;
                     retList.Add(index);
                 }
             }
@@ -161,105 +202,13 @@ namespace DreamAnt.IPP
                             break;
                         }
 
-                        int index = tempY * this.dotPerLine + tempX;
+                        int index = tempY * _dotPerLine + tempX;
                         retList.Add(index);
                     }
                 }
             }
 
             return retList;
-        }
-
-        public void OnInputComplete()
-        {
-            string inputString = string.Empty;
-            if (userInput.Count <= 0)
-                return;
-
-            foreach (var obj in userInput)
-            {
-                var inputPoint = pointList.Find(point => point.obj.Equals(obj));
-                inputString += inputPoint.value;
-            }
-
-           /* if (GameManager.instance != null)
-            {
-                GameManager.instance.SetPatten(inputString);
-            }*/
-
-            this.lineRenderer.positionCount = 0;
-            //this.lineRenderer.gameObject.SetActive(false);
-            userInput.Clear();
-        }
-
-        void IPointerUpHandler.OnPointerUp(PointerEventData eventData)
-        {
-            inputCollider.enabled = false;
-            OnInputComplete();
-        }
-
-        void IPointerDownHandler.OnPointerDown(PointerEventData eventData)
-        {
-            Vector2 localPos = Vector2.zero;
-            
-            RectTransformUtility.ScreenPointToLocalPointInRectangle(rectTransform, eventData.position,
-                Camera.main, out localPos);
-            
-            inputRectTransform.localPosition = localPos;
-
-            inputCollider.enabled = true;
-            userInput.Clear();
-        }
-        
-        public void StartTutorialLine(string itemName)
-        {
-            List<Transform> tutorialCommand = new List<Transform>();
-            switch (itemName)
-            {
-                case "Jump":
-                    tutorialCommand.Add(commands[1].transform);
-                    tutorialCommand.Add(commands[4].transform);
-                    tutorialCommand.Add(commands[7].transform);
-                    break;
-                case "Dash":
-
-                    tutorialCommand.Add(commands[0].transform);
-                    tutorialCommand.Add(commands[1].transform);
-                    tutorialCommand.Add(commands[2].transform);
-                    break;
-                case "Sit":
-
-                    tutorialCommand.Add(commands[7].transform);
-                    tutorialCommand.Add(commands[4].transform);
-                    tutorialCommand.Add(commands[1].transform);
-                    break;
-                case "Attack":
-
-                    tutorialCommand.Add(commands[0].transform);
-                    tutorialCommand.Add(commands[4].transform);
-                    tutorialCommand.Add(commands[8].transform);
-                    break;
-                case "Bow":
-
-                    tutorialCommand.Add(commands[6].transform);
-                    tutorialCommand.Add(commands[4].transform);
-                    tutorialCommand.Add(commands[2].transform);
-
-                    break;
-            }
-
-            lineRenderer.positionCount = tutorialCommand.Count;
-            
-            for (int i = 0; i < tutorialCommand.Count; i++)
-            {
-                lineRenderer.SetPosition(i, tutorialCommand[i].position);
-            }
-            // GameObject.Find("TutorialLine").GetComponent<LineController>().SetUpLine(tutorialCommand.ToArray());
-        }
-
-        public void EndTutorialLine()
-        {
-            lineRenderer.positionCount = 0;
         }
     }
     

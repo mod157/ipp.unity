@@ -1,25 +1,25 @@
 using System;
 using UnityEngine;
+using UnityEngine.UIElements;
 
 namespace DreamAnt.IPP
 {
     public class InputTrigger : MonoBehaviour
     {
-        [SerializeField] private InputPad inputPad;
+        private Action<GameObject> _triggerAction;
 
-        private void OnCollisionEnter2D(Collision2D other)
+        public void SetAction(Action<GameObject> triggerAction)
         {
-            Debug.Log("Collision - " + other.gameObject.name);
+            _triggerAction = triggerAction;
         }
-
-        // Start is called before the first frame update
+        
         private void OnTriggerEnter2D(Collider2D collision)
         {
-            Debug.Log("Trigger - " + collision.name);
             if (collision.CompareTag("InputPoint") == false)
                 return;
-            
-            inputPad.Input(collision.gameObject);
+
+            if (_triggerAction != null)
+                _triggerAction.Invoke(collision.gameObject);
         }
     }
 }

@@ -203,7 +203,7 @@ LineRenderer:
   m_RenderingLayerMask: 1
   m_RendererPriority: 0
   m_Materials:
-  - {fileID: 15303, guid: 0000000000000000f000000000000000, type: 0}
+  - {fileID: 2100000, guid: ccbad7fa859e44749adf052ce99629bc, type: 2}
   m_StaticBatchInfo:
     firstSubMesh: 0
     subMeshCount: 0
@@ -818,7 +818,6 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: e1ab6e5f772c85940834bb1e08c48fa1, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  inputPad: {fileID: 1891759154418908765}
 --- !u!222 &8493655859620534942
 CanvasRenderer:
   m_ObjectHideFlags: 0
@@ -2506,7 +2505,7 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 0cca5f41342868b46ad715c0f8f56bf7, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  uiCamera: {fileID: 0}
+  inputTrigger: {fileID: 3530603633229037871}
   commands:
   - {fileID: 8302906374058507317}
   - {fileID: 8302906373765218088}
