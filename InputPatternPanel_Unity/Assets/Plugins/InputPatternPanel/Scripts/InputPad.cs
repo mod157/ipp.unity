@@ -50,18 +50,19 @@ namespace DreamAnt.IPP
 
         void IBeginDragHandler.OnBeginDrag(PointerEventData eventData)
         {
-            //inputCollider.enabled = true;
-            //userInput.Clear();
+            /*inputCollider.enabled = true;
+            _userInput.Clear();*/
         }
 
         void IEndDragHandler.OnEndDrag(PointerEventData eventData)
         {
-            //inputCollider.enabled = false;
-            //OnInputComplete();
+           /* inputCollider.enabled = false;
+            OnInputComplete();*/
         }
 
         public void Input(GameObject obj)
         {
+            Debug.Log("Input Obj Name - " + obj.name);
             if (_userInput.Count <= 0)
             {
                 _userInput.Add(obj);
@@ -97,11 +98,13 @@ namespace DreamAnt.IPP
 
        
 
-        public void OnInputComplete()
+        public string OnInputComplete()
         {
+            Debug.Log("InputComplete");
             string inputString = string.Empty;
+            
             if (_userInput.Count <= 0)
-                return;
+                return string.Empty;
 
             foreach (var obj in _userInput)
             {
@@ -114,15 +117,19 @@ namespace DreamAnt.IPP
                 GameManager.instance.SetPatten(inputString);
             }*/
 
-            lineRenderer.positionCount = 0;
-            //this.lineRenderer.gameObject.SetActive(false);
-            _userInput.Clear();
+           return inputString;
         }
 
         void IPointerUpHandler.OnPointerUp(PointerEventData eventData)
         {
             inputCollider.enabled = false;
-            OnInputComplete();
+            string inputString = OnInputComplete();
+            
+            Debug.Log(inputString);
+            
+            lineRenderer.positionCount = 0;
+            lineRenderer.gameObject.SetActive(false);
+            _userInput.Clear();
         }
 
         void IPointerDownHandler.OnPointerDown(PointerEventData eventData)
