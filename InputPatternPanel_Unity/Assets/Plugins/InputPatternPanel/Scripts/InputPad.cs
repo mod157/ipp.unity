@@ -14,14 +14,16 @@ namespace DreamAnt.IPP
         [SerializeField] private BoxCollider2D inputCollider;
         [SerializeField] private LineRenderer inputLineRenderer;
 
-        [Space(20)]
+        [Space(10)]
         [Header("Option")] 
         [SerializeField] private bool isInputLine = true;
+        [SerializeField] private bool isEditorDebug = true;
 
         private Canvas _padCanvas;
         private Camera _padCamera;
         private RectTransform _inputRectTransform;
         private RectTransform _rectTransform;
+        [SerializeField]
         private List<GameObject> _userInput;
         private int _dotPerLine = 3;
 
@@ -54,9 +56,7 @@ namespace DreamAnt.IPP
         void IPointerDownHandler.OnPointerDown(PointerEventData eventData)
         {
             _inputRectTransform.localPosition = GetPointerPosition(eventData.position);
-
             inputCollider.enabled = true;
-            _userInput.Clear();
         }
         
         void IPointerUpHandler.OnPointerUp(PointerEventData eventData)
@@ -65,15 +65,14 @@ namespace DreamAnt.IPP
             if(resultAction != null)
                 resultAction.Invoke(OnInputComplete());
             
+#if UNITY_EDITOR
+            if(isEditorDebug)
+                Debug.Log($"OnInputComplete - [{OnInputComplete()}]");
+#endif
             inputCollider.enabled = false;
             _userInput.Clear();
-            
-            /*
-            if (isInputLine)
-            {
-                lineRenderer.positionCount = 0;
-                lineRenderer.gameObject.SetActive(false);
-            }*/
+
+           // inputLineRenderer.positionCount = 0;
         }
 
         void IDragHandler.OnDrag(PointerEventData eventData)
@@ -88,15 +87,16 @@ namespace DreamAnt.IPP
         
         public void Input(GameObject obj)
         {
-            if (_userInput.Count == 0)
+            #if UNITY_EDITOR
+            if(isEditorDebug)
+                Debug.Log("Input - " + obj.name);
+            #endif
+            
+            if (_userInput.Count <= 0)
             {
                 _userInput.Add(obj);
+                OnAddLine(obj.transform.position);
                 
-                if (isInputLine)
-                {
-                    OnAddLine(obj.transform.position);
-                }
-
                 return;
             }
 
@@ -140,6 +140,9 @@ namespace DreamAnt.IPP
 
         private void OnAddLine(Vector3 position)
         {
+            if (!isInputLine)
+                return;
+            
             inputLineRenderer.positionCount = _userInput.Count;
             inputLineRenderer.SetPosition(_userInput.Count - 1, position);
         }
@@ -149,8 +152,9 @@ namespace DreamAnt.IPP
             RectTransformUtility.ScreenPointToLocalPointInRectangle(_rectTransform, eventPosition,
                 _padCamera, out Vector2 localPos);
 
-            localPos.x = Mathf.Clamp(localPos.x, _rectTransform.rect.xMin, _rectTransform.rect.xMax);
-            localPos.y = Mathf.Clamp(localPos.y, _rectTransform.rect.yMin, _rectTransform.rect.yMax);
+            var rect = _rectTransform.rect;
+            localPos.x = Mathf.Clamp(localPos.x, rect.xMin, rect.xMax);
+            localPos.y = Mathf.Clamp(localPos.y, rect.yMin, rect.yMax);
             
             _inputRectTransform.localPosition = localPos;
             
@@ -226,9 +230,47 @@ namespace DreamAnt.IPP
 
             return retList;
         }
+        /*
+        void DisplayInputPadCollider()
+        {
+            if (PlayOption.InputPadCollisionDisplay == false)
+            {
+                foreach (var obj in MainUI.Instance.inputPad.PointList)
+                {
+                    var renderer = obj.obj.GetComponentInChildren<LineRenderer>(true);
+                    renderer.gameObject.SetActive(false);
+                }
+            }
+            else
+            {
+                var radius = PlayOption.InputPadCollisionSize;
+                Vector3[] drawPos = new Vector3[360];
+                float x, y;
+                for (int i = 0; i < 360; i++)
+                {
+                    x = Mathf.Cos(Mathf.Deg2Rad * i) * radius;
+                    y = Mathf.Sin(Mathf.Deg2Rad * i) * radius;
+                    drawPos[i] = new Vector3(x, y, 0);
+                }
+
+                foreach (var obj in MainUI.Instance.inputPad.PointList)
+                {
+                    var renderer = obj.obj.GetComponentInChildren<LineRenderer>(true);
+                    renderer.gameObject.SetActive(true);
+                
+                    renderer.positionCount = 360;
+                    renderer.SetPositions(drawPos);
+
+                    //var xP = obj.obj.GetComponent<BoxCollider2D>().size.x / 2;
+                    //var yP = obj.obj.GetComponent<BoxCollider2D>().size.y / 2;
+                    //Vector3[] posArray = { new Vector3(-xP, xP, 0), new Vector3(xP, xP, 0), new Vector3(xP, -xP, 0), new Vector3(-xP, -xP, 0) };
+                    //renderer.SetPositions(posArray);
+                }
+            }
+        }*/
     }
     
-    [System.Serializable]
+    [Serializable]
     public struct Point
     {
         public GameObject obj;
