@@ -3,45 +3,57 @@ using System.Collections.Generic;
 using UnityEngine;
 using UnityEngine.EventSystems;
 using System.Linq;
+using UnityEngine.Serialization;
+using UnityEngine.UI;
 
 namespace DreamAnt.IPP
 {
     public class InputPad : MonoBehaviour, IDragHandler, IPointerUpHandler, IPointerDownHandler
     {
         [Header("Component")] 
-        [SerializeField] private List<Point> pointList;
         [SerializeField] private BoxCollider2D inputCollider;
         [SerializeField] private LineRenderer inputLineRenderer;
+        [SerializeField] private List<PadButton> padButtonList;
         
         [Header("InputPad")]
         [SerializeField] private GameObject buttonObject;
-        [SerializeField] private Vector2 padSize;
+        [SerializeField] private Vector2Int padCount;
+        [Range(0.5f, 2f)]
+        [SerializeField] private float scaleSlider = 1f;
+        [SerializeField] private int radius;
+        [SerializeField] private GridLayoutGroup padGridLayoutGroup;
         [SerializeField] private InputTrigger inputTrigger;
+        
         
         [Space(10)]
         [Header("Option")] 
         [SerializeField] private bool isInputLine = true;
+        [SerializeField] private bool isPointer = false;
+        [SerializeField] private bool isPadButtonRadius = false;
         [SerializeField] private bool isEditorDebug = true;
 
         private Canvas _padCanvas;
+        private CanvasScaler _padCanvasScaler;
         private Camera _padCamera;
         private RectTransform _inputRectTransform;
         private RectTransform _rectTransform;
-        [SerializeField]
-        private Dictionary<int, GameObject> _userInput;
-        private int _dotPerLine = 3;
-
+        private Dictionary<string, PadButton> _userInput;
+        private Vector2 pixelSize;
+        
         public Action<String> resultAction;
 
         void Awake()
         {
             inputCollider.enabled = false;
             _inputRectTransform = inputCollider.GetComponent<RectTransform>();
-            _userInput = new Dictionary<int, GameObject>();
+            _userInput = new Dictionary<string, PadButton>();
             _rectTransform = GetComponent<RectTransform>();
-            _dotPerLine = (int)Mathf.Sqrt(pointList.Count);
+            //_dotPerLine = (int)Mathf.Sqrt(padButtonList.Count);
             _padCanvas = GetComponentInParent<Canvas>();
+            _padCanvasScaler = GetComponentInParent<CanvasScaler>();
+            
             InitUICanvas();
+            InitPadButton();
             
             inputTrigger.SetAction(Input);
         }
@@ -55,6 +67,54 @@ namespace DreamAnt.IPP
             
             if (_padCamera == null || _padCamera != _padCanvas.worldCamera)
                 _padCamera = _padCanvas.worldCamera;
+            
+            float wRatio = Screen.width  / _padCanvasScaler.referenceResolution.x;
+            float hRatio = Screen.height / _padCanvasScaler.referenceResolution.y;
+
+            // 결과 비율값
+            float ratio =
+                wRatio * (1f - _padCanvasScaler.matchWidthOrHeight) +
+                hRatio * (_padCanvasScaler.matchWidthOrHeight);
+
+            // 현재 스크린에서 RectTransform의 실제 너비, 높이
+            var rect = _rectTransform.rect;
+            float pixelWidth  = rect.width  * ratio;
+            float pixelHeight = rect.height * ratio;
+
+            pixelSize = new Vector2(pixelWidth, pixelHeight);
+
+            if (isPointer)
+            {
+                inputCollider.GetComponent<Image>().enabled = true;
+            }
+            else
+            {
+                inputCollider.GetComponent<Image>().enabled = false;
+            }
+        }
+
+        private void InitPadButton()
+        {
+            if(padCount.x == 0 || padCount.y == 0)
+                Debug.LogError("padSize Zero Error");
+
+            int cellX = Mathf.RoundToInt(pixelSize.x / padCount.x * scaleSlider);
+            int cellY = Mathf.RoundToInt(pixelSize.y / padCount.y * scaleSlider);
+            
+            padGridLayoutGroup.cellSize = new Vector2(cellX, cellY);
+            //padGridLayoutGroup.spacing = new Vector2Int(cellX + radius, cellY + radius);
+            padGridLayoutGroup.constraint = GridLayoutGroup.Constraint.FixedColumnCount;
+            padGridLayoutGroup.constraintCount = padCount.x;
+
+            int totalCount = padCount.x * padCount.y;
+
+            for (int i = 0; i < totalCount; i++)
+            {
+                PadButton buttonPad = Instantiate(buttonObject, padGridLayoutGroup.transform).GetComponent<PadButton>();
+                buttonPad.Initialized(radius,((char)('A' + i)).ToString());
+                buttonPad.DisplayInputPadCollider(isPadButtonRadius);
+                padButtonList.Add(buttonPad);
+            }
         }
         
         void IPointerDownHandler.OnPointerDown(PointerEventData eventData)
@@ -87,47 +147,12 @@ namespace DreamAnt.IPP
         
         public void Input(GameObject obj)
         {
-            #if UNITY_EDITOR
-            if(isEditorDebug)
-                Debug.Log("Input - " + obj.name + " / " + obj.GetHashCode());
-            #endif
-            
-           /* if (_userInput.Count <= 0)
+            PadButton inputButton = padButtonList.Find(o => obj.Equals(o.gameObject));
+            if (!_userInput.TryGetValue(inputButton.Uid, out PadButton result))
             {
-                _userInput.Add(obj);
-                OnAddLine(obj.transform.position);
-                
-                return;
-            }*/
-
-            if (!_userInput.TryGetValue(obj.GetHashCode(), out GameObject value))
-            {
-                _userInput.Add(obj.GetHashCode(), obj);
-                Point currentObject = pointList.Find(o => obj.Equals(o.obj));
-                OnAddLine(_userInput.Count - 1, currentObject.obj.transform.position);
+                _userInput.Add(inputButton.Uid, inputButton);
+                OnAddLine(_userInput.Count - 1, inputButton.transform.position);
             }
-            
-            /*
-            if (_userInput.Find(o => obj.Equals(o)) == null)
-            {
-                var lastInputObject = _userInput.Last();
-                var lastInputIndex = pointList.FindIndex(o => lastInputObject.Equals(o.obj));
-                var currentObjectIndex = pointList.FindIndex(o => obj.Equals(o.obj));
-
-                List<int> betweenIndexList = GetBetweenObjectList(lastInputIndex, currentObjectIndex);
-                
-                foreach (int idx in betweenIndexList)
-                {
-                    if (_userInput.Find(o => pointList[idx].obj.Equals(o)) != null)
-                        continue;
-
-                    _userInput.Add(pointList[idx].obj);
-                    OnAddLine(pointList[idx].obj.transform.position);
-                }
-
-                _userInput.Add(obj);
-                OnAddLine(obj.transform.position);
-            }*/
         }
 
         private string OnInputComplete()
@@ -137,10 +162,9 @@ namespace DreamAnt.IPP
             
             string inputString = string.Empty;
             
-            foreach (var objValue in _userInput.Values)
+            foreach (var padValue in _userInput.Values)
             {
-                var inputPoint = pointList.Find(point => point.obj.Equals(objValue));
-                inputString += inputPoint.value;
+                inputString += padValue.Value;
             }
             
            return inputString;
@@ -177,83 +201,5 @@ namespace DreamAnt.IPP
             
             return localPos;
         }
-        
-        private List<int> GetBetweenObjectList(int beginIndex, int endIndex)
-        {
-            List<int> retList = new List<int>();
-
-            Vector2Int begin = new Vector2Int(beginIndex % _dotPerLine, beginIndex / _dotPerLine);
-            Vector2Int end = new Vector2Int(endIndex % _dotPerLine, endIndex / _dotPerLine);
-
-            Vector2Int diff = end - begin;
-            if (diff.x == 0 && diff.y == 0) //���� ��ġ(���ø� ����)
-            {
-
-            }
-            else if (diff.x == 0 && diff.y != 0) // ���η� �߰��� üũ
-            {
-                int moveValue = diff.y > 0 ? 1 : -1;
-                int temp = begin.y;
-                while (true)
-                {
-                    temp += moveValue;
-                    if (temp == end.y)
-                    {
-                        break;
-                    }
-
-                    int index = temp * _dotPerLine + begin.x;
-                    retList.Add(index);
-                }
-            }
-            else if (diff.x != 0 && diff.y == 0) // ���η� �߰��� üũ
-            {
-                int moveValue = diff.x > 0 ? 1 : -1;
-                int temp = begin.x;
-                while (true)
-                {
-                    temp += moveValue;
-                    if (temp == end.x)
-                    {
-                        break;
-                    }
-
-                    int index = begin.y * _dotPerLine + temp;
-                    retList.Add(index);
-                }
-            }
-            else
-            {
-                if (Mathf.Abs(diff.x) == Mathf.Abs(diff.y)) // �밢�� �߰��� üũ
-                {
-                    int moveXValue = diff.x > 0 ? 1 : -1;
-                    int moveYValue = diff.y > 0 ? 1 : -1;
-                    int tempX = begin.x;
-                    int tempY = begin.y;
-                    while (true)
-                    {
-                        tempX += moveXValue;
-                        tempY += moveYValue;
-                        if (end.x == tempX && end.y == tempY)
-                        {
-                            break;
-                        }
-
-                        int index = tempY * _dotPerLine + tempX;
-                        retList.Add(index);
-                    }
-                }
-            }
-
-            return retList;
-        }
-        
-    }
-    
-    [Serializable]
-    public struct Point
-    {
-        public GameObject obj;
-        public string value;
     }
 }
