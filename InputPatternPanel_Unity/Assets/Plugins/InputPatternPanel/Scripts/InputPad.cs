@@ -9,11 +9,15 @@ namespace DreamAnt.IPP
     public class InputPad : MonoBehaviour, IDragHandler, IPointerUpHandler, IPointerDownHandler
     {
         [Header("Component")] 
-        [SerializeField] private InputTrigger inputTrigger;
         [SerializeField] private List<Point> pointList;
         [SerializeField] private BoxCollider2D inputCollider;
         [SerializeField] private LineRenderer inputLineRenderer;
-
+        
+        [Header("InputPad")]
+        [SerializeField] private GameObject buttonObject;
+        [SerializeField] private Vector2 padSize;
+        [SerializeField] private InputTrigger inputTrigger;
+        
         [Space(10)]
         [Header("Option")] 
         [SerializeField] private bool isInputLine = true;
@@ -24,7 +28,7 @@ namespace DreamAnt.IPP
         private RectTransform _inputRectTransform;
         private RectTransform _rectTransform;
         [SerializeField]
-        private List<GameObject> _userInput;
+        private Dictionary<int, GameObject> _userInput;
         private int _dotPerLine = 3;
 
         public Action<String> resultAction;
@@ -33,7 +37,7 @@ namespace DreamAnt.IPP
         {
             inputCollider.enabled = false;
             _inputRectTransform = inputCollider.GetComponent<RectTransform>();
-            _userInput = new List<GameObject>();
+            _userInput = new Dictionary<int, GameObject>();
             _rectTransform = GetComponent<RectTransform>();
             _dotPerLine = (int)Mathf.Sqrt(pointList.Count);
             _padCanvas = GetComponentInParent<Canvas>();
@@ -72,34 +76,38 @@ namespace DreamAnt.IPP
             inputCollider.enabled = false;
             _userInput.Clear();
 
-           // inputLineRenderer.positionCount = 0;
+            inputLineRenderer.positionCount = 0;
         }
 
         void IDragHandler.OnDrag(PointerEventData eventData)
         {
             _inputRectTransform.localPosition = GetPointerPosition(eventData.position);
-
-            if (isInputLine && _userInput.Count > 0)
-            {
-                OnAddLine(inputCollider.transform.position);
-            }
+            OnAddLine(inputCollider.transform.position);
         }
         
         public void Input(GameObject obj)
         {
             #if UNITY_EDITOR
             if(isEditorDebug)
-                Debug.Log("Input - " + obj.name);
+                Debug.Log("Input - " + obj.name + " / " + obj.GetHashCode());
             #endif
             
-            if (_userInput.Count <= 0)
+           /* if (_userInput.Count <= 0)
             {
                 _userInput.Add(obj);
                 OnAddLine(obj.transform.position);
                 
                 return;
-            }
+            }*/
 
+            if (!_userInput.TryGetValue(obj.GetHashCode(), out GameObject value))
+            {
+                _userInput.Add(obj.GetHashCode(), obj);
+                Point currentObject = pointList.Find(o => obj.Equals(o.obj));
+                OnAddLine(_userInput.Count - 1, currentObject.obj.transform.position);
+            }
+            
+            /*
             if (_userInput.Find(o => obj.Equals(o)) == null)
             {
                 var lastInputObject = _userInput.Last();
@@ -119,7 +127,7 @@ namespace DreamAnt.IPP
 
                 _userInput.Add(obj);
                 OnAddLine(obj.transform.position);
-            }
+            }*/
         }
 
         private string OnInputComplete()
@@ -129,9 +137,9 @@ namespace DreamAnt.IPP
             
             string inputString = string.Empty;
             
-            foreach (var obj in _userInput)
+            foreach (var objValue in _userInput.Values)
             {
-                var inputPoint = pointList.Find(point => point.obj.Equals(obj));
+                var inputPoint = pointList.Find(point => point.obj.Equals(objValue));
                 inputString += inputPoint.value;
             }
             
@@ -143,8 +151,17 @@ namespace DreamAnt.IPP
             if (!isInputLine)
                 return;
             
-            inputLineRenderer.positionCount = _userInput.Count;
-            inputLineRenderer.SetPosition(_userInput.Count - 1, position);
+            inputLineRenderer.positionCount = _userInput.Count + 1;
+            inputLineRenderer.SetPosition(_userInput.Count, position);
+        }
+        private void OnAddLine(int index, Vector3 position)
+        {
+            if (!isInputLine)
+                return;
+            
+            inputLineRenderer.positionCount = _userInput.Count + 1;
+            inputLineRenderer.SetPosition(index, position);
+            inputLineRenderer.SetPosition(index + 1, position);
         }
 
         private Vector2 GetPointerPosition(Vector2 eventPosition)
@@ -230,44 +247,7 @@ namespace DreamAnt.IPP
 
             return retList;
         }
-        /*
-        void DisplayInputPadCollider()
-        {
-            if (PlayOption.InputPadCollisionDisplay == false)
-            {
-                foreach (var obj in MainUI.Instance.inputPad.PointList)
-                {
-                    var renderer = obj.obj.GetComponentInChildren<LineRenderer>(true);
-                    renderer.gameObject.SetActive(false);
-                }
-            }
-            else
-            {
-                var radius = PlayOption.InputPadCollisionSize;
-                Vector3[] drawPos = new Vector3[360];
-                float x, y;
-                for (int i = 0; i < 360; i++)
-                {
-                    x = Mathf.Cos(Mathf.Deg2Rad * i) * radius;
-                    y = Mathf.Sin(Mathf.Deg2Rad * i) * radius;
-                    drawPos[i] = new Vector3(x, y, 0);
-                }
-
-                foreach (var obj in MainUI.Instance.inputPad.PointList)
-                {
-                    var renderer = obj.obj.GetComponentInChildren<LineRenderer>(true);
-                    renderer.gameObject.SetActive(true);
-                
-                    renderer.positionCount = 360;
-                    renderer.SetPositions(drawPos);
-
-                    //var xP = obj.obj.GetComponent<BoxCollider2D>().size.x / 2;
-                    //var yP = obj.obj.GetComponent<BoxCollider2D>().size.y / 2;
-                    //Vector3[] posArray = { new Vector3(-xP, xP, 0), new Vector3(xP, xP, 0), new Vector3(xP, -xP, 0), new Vector3(-xP, -xP, 0) };
-                    //renderer.SetPositions(posArray);
-                }
-            }
-        }*/
+        
     }
     
     [Serializable]
