@@ -1,3 +1,4 @@
+using System;
 using System.Collections.Generic;
 using UnityEngine;
 using UnityEngine.EventSystems;
@@ -5,19 +6,26 @@ using System.Linq;
 
 namespace DreamAnt.IPP
 {
-    public class InputPad : MonoBehaviour, IBeginDragHandler, IDragHandler, IEndDragHandler, IPointerUpHandler, IPointerDownHandler
+    public class InputPad : MonoBehaviour, IDragHandler, IPointerUpHandler, IPointerDownHandler
     {
+        [Header("Component")] 
         [SerializeField] private InputTrigger inputTrigger;
-        [SerializeField] private GameObject[] commands;
         [SerializeField] private List<Point> pointList;
         [SerializeField] private BoxCollider2D inputCollider;
-        [SerializeField] private LineRenderer lineRenderer;
+        [SerializeField] private LineRenderer inputLineRenderer;
 
+        [Space(20)]
+        [Header("Option")] 
+        [SerializeField] private bool isInputLine = true;
+
+        private Canvas _padCanvas;
+        private Camera _padCamera;
         private RectTransform _inputRectTransform;
         private RectTransform _rectTransform;
-
         private List<GameObject> _userInput;
         private int _dotPerLine = 3;
+
+        public Action<String> resultAction;
 
         void Awake()
         {
@@ -26,49 +34,69 @@ namespace DreamAnt.IPP
             _userInput = new List<GameObject>();
             _rectTransform = GetComponent<RectTransform>();
             _dotPerLine = (int)Mathf.Sqrt(pointList.Count);
+            _padCanvas = GetComponentInParent<Canvas>();
+            InitUICanvas();
             
             inputTrigger.SetAction(Input);
         }
 
+        private void InitUICanvas()
+        {
+            _padCanvas.renderMode = RenderMode.ScreenSpaceCamera;
+
+            if (_padCanvas.worldCamera == null)
+                _padCanvas.worldCamera = Camera.main;
+            
+            if (_padCamera == null || _padCamera != _padCanvas.worldCamera)
+                _padCamera = _padCanvas.worldCamera;
+        }
+        
+        void IPointerDownHandler.OnPointerDown(PointerEventData eventData)
+        {
+            _inputRectTransform.localPosition = GetPointerPosition(eventData.position);
+
+            inputCollider.enabled = true;
+            _userInput.Clear();
+        }
+        
+        void IPointerUpHandler.OnPointerUp(PointerEventData eventData)
+        {
+            //Result PointerData - String
+            if(resultAction != null)
+                resultAction.Invoke(OnInputComplete());
+            
+            inputCollider.enabled = false;
+            _userInput.Clear();
+            
+            /*
+            if (isInputLine)
+            {
+                lineRenderer.positionCount = 0;
+                lineRenderer.gameObject.SetActive(false);
+            }*/
+        }
+
         void IDragHandler.OnDrag(PointerEventData eventData)
         {
-            Vector2 localPos;
-            RectTransformUtility.ScreenPointToLocalPointInRectangle(_rectTransform, eventData.position,
-                Camera.main, out localPos);
+            _inputRectTransform.localPosition = GetPointerPosition(eventData.position);
 
-            localPos.x = Mathf.Clamp(localPos.x, _rectTransform.rect.xMin, _rectTransform.rect.xMax);
-            localPos.y = Mathf.Clamp(localPos.y, _rectTransform.rect.yMin, _rectTransform.rect.yMax);
-            
-            _inputRectTransform.localPosition = localPos;
-
-            if (_userInput.Count > 0)
+            if (isInputLine && _userInput.Count > 0)
             {
-                lineRenderer.positionCount = _userInput.Count + 1;
-                lineRenderer.SetPosition(_userInput.Count, inputCollider.transform.position);
+                OnAddLine(inputCollider.transform.position);
             }
         }
-
-        void IBeginDragHandler.OnBeginDrag(PointerEventData eventData)
-        {
-            /*inputCollider.enabled = true;
-            _userInput.Clear();*/
-        }
-
-        void IEndDragHandler.OnEndDrag(PointerEventData eventData)
-        {
-           /* inputCollider.enabled = false;
-            OnInputComplete();*/
-        }
-
+        
         public void Input(GameObject obj)
         {
-            Debug.Log("Input Obj Name - " + obj.name);
-            if (_userInput.Count <= 0)
+            if (_userInput.Count == 0)
             {
                 _userInput.Add(obj);
-                lineRenderer.positionCount = _userInput.Count;
+                
+                if (isInputLine)
+                {
+                    OnAddLine(obj.transform.position);
+                }
 
-                lineRenderer.SetPosition(_userInput.Count - 1, obj.transform.position);
                 return;
             }
 
@@ -79,76 +107,57 @@ namespace DreamAnt.IPP
                 var currentObjectIndex = pointList.FindIndex(o => obj.Equals(o.obj));
 
                 List<int> betweenIndexList = GetBetweenObjectList(lastInputIndex, currentObjectIndex);
+                
                 foreach (int idx in betweenIndexList)
                 {
                     if (_userInput.Find(o => pointList[idx].obj.Equals(o)) != null)
                         continue;
 
                     _userInput.Add(pointList[idx].obj);
-                    lineRenderer.positionCount = _userInput.Count;
-                    lineRenderer.SetPosition(_userInput.Count - 1, pointList[idx].obj.transform.position);
+                    OnAddLine(pointList[idx].obj.transform.position);
                 }
 
                 _userInput.Add(obj);
-                lineRenderer.positionCount = _userInput.Count;
-
-                lineRenderer.SetPosition(_userInput.Count - 1, obj.transform.position);
+                OnAddLine(obj.transform.position);
             }
         }
 
-       
-
-        public string OnInputComplete()
+        private string OnInputComplete()
         {
-            Debug.Log("InputComplete");
-            string inputString = string.Empty;
-            
             if (_userInput.Count <= 0)
                 return string.Empty;
-
+            
+            string inputString = string.Empty;
+            
             foreach (var obj in _userInput)
             {
                 var inputPoint = pointList.Find(point => point.obj.Equals(obj));
                 inputString += inputPoint.value;
             }
-
-           /* if (GameManager.instance != null)
-            {
-                GameManager.instance.SetPatten(inputString);
-            }*/
-
+            
            return inputString;
         }
 
-        void IPointerUpHandler.OnPointerUp(PointerEventData eventData)
+        private void OnAddLine(Vector3 position)
         {
-            inputCollider.enabled = false;
-            string inputString = OnInputComplete();
-            
-            Debug.Log(inputString);
-            
-            lineRenderer.positionCount = 0;
-            lineRenderer.gameObject.SetActive(false);
-            _userInput.Clear();
+            inputLineRenderer.positionCount = _userInput.Count;
+            inputLineRenderer.SetPosition(_userInput.Count - 1, position);
         }
 
-        void IPointerDownHandler.OnPointerDown(PointerEventData eventData)
+        private Vector2 GetPointerPosition(Vector2 eventPosition)
         {
-            RectTransformUtility.ScreenPointToLocalPointInRectangle(_rectTransform, eventData.position,
-                Camera.main, out var localPos);
+            RectTransformUtility.ScreenPointToLocalPointInRectangle(_rectTransform, eventPosition,
+                _padCamera, out Vector2 localPos);
+
+            localPos.x = Mathf.Clamp(localPos.x, _rectTransform.rect.xMin, _rectTransform.rect.xMax);
+            localPos.y = Mathf.Clamp(localPos.y, _rectTransform.rect.yMin, _rectTransform.rect.yMax);
             
             _inputRectTransform.localPosition = localPos;
-
-            inputCollider.enabled = true;
-            _userInput.Clear();
+            
+            return localPos;
         }
         
-        public void EndTutorialLine()
-        {
-            lineRenderer.positionCount = 0;
-        }
-        
-         private List<int> GetBetweenObjectList(int beginIndex, int endIndex)
+        private List<int> GetBetweenObjectList(int beginIndex, int endIndex)
         {
             List<int> retList = new List<int>();
 
