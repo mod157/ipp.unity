@@ -8,17 +8,17 @@ InputPaternPanel은 패턴 이벤트를 간편하게 처리할 수 있도록 도
 * 간단한 코드로 다양한 입력 패턴을 처리할 수 있어 많은 편의를 제공합니다.
   
 [![Sample](https://img.shields.io/badge/YouTube-red?style=for-the-badge&logo=youtube&logoColor=white)](https://youtu.be/1gNE5MmUmAQ)
+
 ---
 Nammu - DreamAntDev  
 Email : nammu8395@gmail.com  
 GitHub Issue : https://github.com/mod157/ipp.unity/issues  
 
 ---
-Contents
+Table of Contents
 ---
 - [InputPaternPanel for Unity](#inputpaternpanel-for-unity)
-  - [](#)
-  - [Contents](#contents)
+  - [Table of Contents](#table-of-contents)
   - [History](#history)
   - [Getting started](#getting-started)
   - [UPM package](#upm-package)
