@@ -1,31 +1,31 @@
 {
-    "name": "pe.nammu.ipp",
-    "version": "1.0.0",
-    "displayName": "InputPadPanel SDK",
-    "description": "InputPadPanel SDK Package",
-    "unity": "2023.2",
-    "unityRelease": "0f3",
-    "documentationUrl": "https://github.com/mod157/ipp.unity",
-    "category": "2D",
-    "license": "MIT",
-    "dependencies": {
-    },
-    "keywords": [
-      "nammu",
-      "InputPadPanel",
-      "ipp"
-    ],
-    "author": {
-      "name": "Sunjae LEE",
-      "email": "Nammu@gmail.com",
-      "url": "https://www.linkedin.com/in/nammu/"
-    },
-    "samples": [
-      {
-      "displayName": "Samples",
-      "description": "ipp Sample Game",
-      "path": "Samples~/"
-      }
-    ]
-  }
- 
+  "name": "pe.nammu.ipp",
+  "version": "1.0.1",
+  "displayName": "InputPatternPanel SDK",
+  "description": "InputPatternPanel SDK Package",
+  "unity": "2023.2",
+  "unityRelease": "0f3",
+  "documentationUrl": "https://github.com/mod157/ipp.unity",
+  "category": "2D",
+  "license": "MIT",
+  "dependencies": {
+  },
+  "keywords": [
+    "nammu",
+    "InputPattern",
+    "Pattern",
+    "ipp"
+  ],
+  "author": {
+    "name": "Sunjae LEE",
+    "email": "Nammu@gmail.com",
+    "url": "https://www.linkedin.com/in/nammu/"
+  },
+  "samples": [
+    {
+    "displayName": "Samples",
+    "description": "ipp Sample Game",
+    "path": "Samples~/"
+    }
+  ]
+}

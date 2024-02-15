@@ -1,7 +1,7 @@
-# InputPaternPanel for Unity
+# InputPatternPanel for Unity
 [![Releases](https://img.shields.io/github/release/mod157/ipp.unity.svg)](https://github.com/mod157/ipp.unity/releases) [![Readme_EN](https://img.shields.io/badge/ipp.unity-en-red)](https://github.com/mod157/ipp.unity/README_EN.md)
 
-InputPaternPanel is a library that helps you handle pattern events easily.
+InputPatternPanel is a library that helps you handle pattern events easily.
 * Depending on the input pattern, you can handle the appropriate events.
 * It is useful for effectively detecting user input and controlling the behavior of a program or application accordingly.
 * It provides a lot of convenience as it can handle various input patterns with simple code.
@@ -19,7 +19,7 @@ GitHub Issue : https://github.com/mod157/ipp.unity/issues
 ---
 Table of Contents
 ---
-- [InputPaternPanel for Unity](#inputpaternpanel-for-unity)
+- [InputPatternPanel for Unity](#inputpatternpanel-for-unity)
   - [Table of Contents](#table-of-contents)
   - [History](#history)
   - [Getting started](#getting-started)

@@ -1,8 +1,8 @@
 {
     "name": "pe.nammu.ipp",
-    "version": "1.0.0",
-    "displayName": "InputPadPanel SDK",
-    "description": "InputPadPanel SDK Package",
+    "version": "1.0.1",
+    "displayName": "InputPatternPanel SDK",
+    "description": "InputPatternPanel SDK Package",
     "unity": "2023.2",
     "unityRelease": "0f3",
     "documentationUrl": "https://github.com/mod157/ipp.unity",
@@ -12,7 +12,8 @@
     },
     "keywords": [
       "nammu",
-      "InputPadPanel",
+      "InputPattern",
+      "Pattern",
       "ipp"
     ],
     "author": {
