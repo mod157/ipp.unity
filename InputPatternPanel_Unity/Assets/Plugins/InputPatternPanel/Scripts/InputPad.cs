@@ -38,9 +38,9 @@ namespace DreamAnt.IPP
         private RectTransform _inputRectTransform;
         private RectTransform _rectTransform;
         private Dictionary<string, PadButton> _userInput;
-        private Vector2 pixelSize;
+        private Vector2 _pixelSize;
         
-        public Action<String> resultAction;
+        public Action<string> resultAction;
 
         void Awake()
         {
@@ -81,7 +81,7 @@ namespace DreamAnt.IPP
             float pixelWidth  = rect.width  * ratio;
             float pixelHeight = rect.height * ratio;
 
-            pixelSize = new Vector2(pixelWidth, pixelHeight);
+            _pixelSize = new Vector2(pixelWidth, pixelHeight);
 
             if (isPointer)
             {
@@ -98,8 +98,8 @@ namespace DreamAnt.IPP
             if(padCount.x == 0 || padCount.y == 0)
                 Debug.LogError("padSize Zero Error");
 
-            int cellX = Mathf.RoundToInt(pixelSize.x / padCount.x * scaleSlider);
-            int cellY = Mathf.RoundToInt(pixelSize.y / padCount.y * scaleSlider);
+            int cellX = Mathf.RoundToInt(_pixelSize.x / padCount.x * scaleSlider);
+            int cellY = Mathf.RoundToInt(_pixelSize.y / padCount.y * scaleSlider);
             
             padGridLayoutGroup.cellSize = new Vector2(cellX, cellY);
             //padGridLayoutGroup.spacing = new Vector2Int(cellX + radius, cellY + radius);
@@ -126,13 +126,14 @@ namespace DreamAnt.IPP
         void IPointerUpHandler.OnPointerUp(PointerEventData eventData)
         {
             //Result PointerData - String
-            if(resultAction != null)
-                resultAction.Invoke(OnInputComplete());
-            
 #if UNITY_EDITOR
             if(isEditorDebug)
                 Debug.Log($"OnInputComplete - [{OnInputComplete()}]");
 #endif
+            
+            if(resultAction != null)
+                resultAction.Invoke(OnInputComplete());
+            
             inputCollider.enabled = false;
             _userInput.Clear();
 
