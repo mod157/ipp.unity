@@ -10,7 +10,7 @@ InputPaternPanel은 패턴 이벤트를 간편하게 처리할 수 있도록 도
 [![Sample](https://img.shields.io/badge/YouTube-red?style=for-the-badge&logo=youtube&logoColor=white)](https://youtu.be/1gNE5MmUmAQ)
 
 ---
-Nammu - DreamAntDev  
+Nammu - [DreamAntDev](https://github.com/DreamAntDev)  
 Email : nammu8395@gmail.com  
 GitHub Issue : https://github.com/mod157/ipp.unity/issues  
 
@@ -21,7 +21,9 @@ Table of Contents
   - [Table of Contents](#table-of-contents)
   - [History](#history)
   - [Getting started](#getting-started)
-  - [UPM package](#upm-package)
+  - [Download](#download)
+      - [Install via git URL](#install-via-git-url)
+      - [UPM package](#upm-package)
   - [License](#license)
 
 
@@ -49,8 +51,14 @@ asset package(`ipp.unity.*.*.*.unitypackage`) available in [ipp.unity/releases](
 |  | `IsPadButtonRadius` | 각 Button 범위 활성/비활성 |
 |  | `IsEditorDebug` | Debug 활성/비활성 | 
 
-UPM package
+Download
 ---
+####  Install via git URL
+Package Manager에 다음 URL을 추가할 수 있습니다.
+`https://github.com/mod157/ipp.unity.git?path=src/Assets/Plugins/InputPatternPanel/`
+
+#### UPM package
+https://openupm.com/packages/pe.nammu.ipp/
 
 License
 ---

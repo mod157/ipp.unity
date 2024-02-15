@@ -23,7 +23,9 @@ Table of Contents
   - [Table of Contents](#table-of-contents)
   - [History](#history)
   - [Getting started](#getting-started)
-  - [UPM package](#upm-package)
+  - [Download](#download)
+      - [Git URL을 통한 설치](#git-url을-통한-설치)
+      - [UPM package](#upm-package)
   - [License](#license)
 
 
@@ -51,8 +53,14 @@ asset package(`ipp.unity.*.*.*.unitypackage`) available in [ipp.unity/releases](
 |  | `IsPadButtonRadius` | Enables/disables button range for each button. |
 |  | `IsEditorDebug` | Enables/disables debug mode. | 
 
-UPM package
+Download
 ---
+#### Git URL을 통한 설치
+Requires a version of unity that supports path query parameter for git packages. 
+You can add `https://github.com/mod157/ipp.unity.git?path=src/Assets/Plugins/InputPatternPanel/` to Package Manager
+
+#### UPM package
+https://openupm.com/packages/pe.nammu.ipp/
 
 License
 ---
