@@ -1,0 +1,20 @@
+{
+    "name": "pe.nammu",
+    "version": "1.0.0",
+    "displayName": "InputPadPanel SDK",
+    "description": "InputPadPanel SDK Package",
+    "unity": "2023.2",
+    "unityRelease": "03f",
+    "dependencies": {
+    },
+    "keywords": [
+      "nammu",
+      "InputPadPanel",
+      "ipp"
+    ],
+    "author": {
+      "name": "Sunjae LEE",
+      "email": "Nammu@gmail.com",
+      "url": "https://me.nammu.pe.kr"
+    }
+  }
